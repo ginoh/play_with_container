@@ -28,8 +28,6 @@ Creating cluster "cluster1" ...
 Set kubectl context to "kind-cluster1"
 You can now use your cluster with:
 
-kubectl cluster-info --context kind-cluster1
-
 Have a nice day! 👋
 
 $ kind create cluster --name cluster2
@@ -57,29 +55,42 @@ nginx-5578584966-7gpd7   1/1     Running   0          8s
 ```
 ### マルチノード + NodePort
 ```
-$ cat kind-node-port-sample.yaml
+$ cat kind-port-mapping.yaml
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
-- role: control-plane
-  extraPortMappings:
-  - containerPort: 30000
-    hostPort: 8888
-- role: worker
-- role: worker
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30000
+        hostPort: 8888
+  - role: worker
+  - role: worker
 
-$ kind create cluster --name node-port-cluster --config kind-node-port-sample.yaml
+$ kind create cluster --name multi-node-cluster --config kind-port-mapping.yaml
+$ kc get nodes
+NAME                               STATUS   ROLES    AGE    VERSION
+multi-node-cluster-control-plane   Ready    master   2d4h   v1.19.1
+multi-node-cluster-worker          Ready    <none>   2d4h   v1.19.1
+multi-node-cluster-worker2         Ready    <none>   2d4h   v1.19.1
 ```
-host(ローカル開発機) の 8888 を control-planeの node (のコンテナ)の 30000 にマッピングした
 
+また、host(ローカル開発機) の 8888 port を control-planeの node (のコンテナ)の 30000 port にマッピングしている
+これは docker コンテナの port の publish 状態でも確認できる
+
+```
+$ docker container ls
+CONTAINER ID   IMAGE                  COMMAND                  CREATED         STATUS         PORTS                                                NAMES
+99372650d102   kindest/node:v1.19.1   "/usr/local/bin/entr…"   5 minutes ago   Up 4 minutes   127.0.0.1:52485->6443/tcp, 0.0.0.0:8888->30000/tcp   multi-node-cluster-control-plane
+702e294ceaca   kindest/node:v1.19.1   "/usr/local/bin/entr…"   5 minutes ago   Up 4 minutes                                                        multi-node-cluster-worker
+a0cf086753f2   kindest/node:v1.19.1   "/usr/local/bin/entr…"   5 minutes ago   Up 4 minutes                                                        multi-node-cluster-worker2
+```
+
+nginx pod を実行、また 30000 port を指定して NodePort service を作る
 ```
 $ kc run nginx --image nginx --labels "app=sample-app"
-
-$ kc create service nodeport sample-node-port-svc --tcp=80:80 --node-port=30000
-$ kc edit services sample-node-port-svc
-$ kc patch services sample-node-port-svc -p '{"spec":{"selector":{"app":"sample-app"}}}'
+$ kc create service nodeport sample-app --tcp=80:80 --node-port=30000
 ```
-
+curlでアクセスして、nginxにリクエストができることを確認
 ```
 $ curl localhost:8888
 <!DOCTYPE html>
@@ -92,7 +103,6 @@ $ curl localhost:8888
 ・
 ```
 
-
 ### マルチノード + Ingress
 
 [参考: 公式ドキュメントのingressのサンプル](https://kind.sigs.k8s.io/docs/user/ingress/)
@@ -102,22 +112,22 @@ $ cat kind-ingress-sample.yaml
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 nodes:
-- role: control-plane
-  kubeadmConfigPatches:
-  - |
-    kind: InitConfiguration
-    nodeRegistration:
-      kubeletExtraArgs:
-        node-labels: "ingress-ready=true"
-  extraPortMappings:
-  - containerPort: 80
-    hostPort: 1080
-    protocol: TCP
-  - containerPort: 443
-    hostPort: 1443
-    protocol: TCP
-- role: worker
-- role: worker
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    extraPortMappings:
+      - containerPort: 80
+        hostPort: 1080
+        protocol: TCP
+      - containerPort: 443
+        hostPort: 1443
+        protocol: TCP
+  - role: worker
+  - role: worker
 ```
 extraPortMappings で hostのportをコンテナにマッピングする
 
