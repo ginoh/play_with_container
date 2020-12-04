@@ -1,3 +1,5 @@
+個人的な Tips
+
 ### dryrunを利用してresourceを作成する雛形にする
 kubectlの `--dry-run`オプションを利用することで resourceを作成する際の雛形として利用する
 
@@ -55,15 +57,18 @@ spec:
         resources: {}
 status: {}
 ```
-TipsのTipsというわけではないが、この方法で yamlを生成した際、配列を値としてもつハッシュは以下のように表現されている
+この方法で yamlを生成した際、配列を値としてもつハッシュは以下のように表現されていた
 ```
 containers:
 - image: nginx:1.13
 ```
-上記の例でいうところのimageのインデントの位置が気になる人はインデントをいれたり何かしらのFormatterツールを利用して整形するとよい。
-例えば、Prettierでフォーマットすると以下のようになる。
+上記の例でいうところのimageのインデントの位置が気になる人はインデントをいれたり何かしらのFormatterツールを利用して整形するとよい
+例えば、Prettier でフォーマットすると以下のようになる
 ```
 containers:
   - image: nginx:1.13
 ```
 
+### debug
+
+(TBD) kubectl alpha debug とか
