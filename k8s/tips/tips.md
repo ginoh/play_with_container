@@ -1,4 +1,4 @@
-個人的な Tips
+個人的な細かい Memo など
 
 ### dryrunを利用してresourceを作成する雛形にする
 kubectlの `--dry-run`オプションを利用することで resourceを作成する際の雛形として利用する
@@ -69,6 +69,65 @@ containers:
   - image: nginx:1.13
 ```
 
-### debug
+### kubectl port-forward を利用してクラスタ外からクラスタ内のPodにアクセスする
+nginx の pod を作成
+```
+$ kubectl run nginx --image nginx --port 80
+```
 
-(TBD) kubectl alpha debug とか
+port-forward を利用して local から port-forward
+```
+$ kubectl port-forward pod/nginx 8080:80
+kubectl port-forward nginx  8080:80
+Forwarding from 127.0.0.1:8080 -> 80
+Forwarding from [::1]:8080 -> 80
+
+// 別の terminal など
+$ curl -s localhost:8080 | head -n 5
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+```
+ちなみにPod起動時に `--port 80` がなくてもつながる。  
+`--port` はメタデータ保存してるようなもの？ Dockerの expose的な？ (今後調べる)
+
+port-forard は serviceを指定可能
+
+nginx の deployment を 作成
+```
+$ kubectl create deployment nginx --image nginx --port 80 --replicas=3 --dry-run=client -o yaml | kubectl apply -f -
+```
+
+expose を利用して service をつくる
+```
+$ kubectl expose deployments nginx
+service/nginx exposed
+
+// --port で exposeしていれば、expose コマンド実行時に port指定しなくてもいい
+$ kubectl get services nginx
+NAME    TYPE        CLUSTER-IP     EXTERNAL-IP   PORT(S)   AGE
+nginx   ClusterIP   10.96.190.36   <none>        80/TCP    41s
+```
+
+port-forward
+```
+$ kubectl port-forward services/nginx 8080:80
+Forwarding from 127.0.0.1:8080 -> 80
+Forwarding from [::1]:8080 -> 80
+
+// 別のterminal など
+$ curl -s localhost:8080 | head -n 5
+<!DOCTYPE html>
+<html>
+<head>
+<title>Welcome to nginx!</title>
+<style>
+```
+注意. service を利用してport-forard はしているが、動作としては特定の一つのPodだけと通信している  
+(-v オプションで ログなどを見るとわかる。)
+
+### kubectl proxy を利用してクラスタ内のServiceにアクセスする
+
+TBD
