@@ -13,6 +13,7 @@
 * secrets-store-csi-driver
 * vault-k8s, bank-vault (vault)
 #### Runtime
+* docker-ce
 * containerd
 * stargz-snapshotter (containerd/stargz-snapshotter)
 #### Build
@@ -21,10 +22,12 @@
 #### Kubernetes
 * knative
 * The Hierarchical Namespace Controller (kubernetes-sigs/multi-tenancy)
+* metalLB
 #### Other
 * k8s-container-image-promoter
-* metalLB
 * Envoy
 #### ServiceMesh
 * Istio
 * Kuma
+#### Registry
+* oras
