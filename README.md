@@ -32,3 +32,4 @@
 * Kuma
 #### Registry
 * oras
+* cavel-imgpkg

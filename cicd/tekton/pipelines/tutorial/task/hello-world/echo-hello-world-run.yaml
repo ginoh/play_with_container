@@ -1,0 +1,8 @@
+apiVersion: tekton.dev/v1beta1
+kind: TaskRun
+metadata:
+  # generateName: echo-hello-world-run-
+  name: echo-hello-world-run
+spec:
+  taskRef:
+    name: echo-hello-world
