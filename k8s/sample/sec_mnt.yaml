@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: sample-secret-mount
+  name: sample-secret-mount
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-secret-mount
+  template:
+    metadata:
+      labels:
+        app: sample-secret-mount
+    spec:
+      containers:
+        - name: nginx-1
+          image: nginx:latest
+          env:
+            - name: oneEnv
+              valueFrom:
+                secretKeyRef:
+                  name: secret-volume1
+                  key: password
+          volumeMounts:
+            - name: secet-volume1
+              mountPath: /tmp/sec1
+        - name: nginx-2
+          image: nginx:latest
+          envFrom:
+            - secretRef:
+                name: secret-volume2
+          volumeMounts:
+            - name: secret-volume2
+              mountPath: /tmp/sec2
+              
+      volumes:
+        - name: secret-volume1
+          secret:
+            secretName: sample-secret1
+        - name: secret-volume2
+          secret:
+            secretName: sample-secret2
+            items:
+              - key: username
+                path: username.txt

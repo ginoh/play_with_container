@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: sample-config-mount
+  name: sample-config-mount
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sample-config-mount
+  template:
+    metadata:
+      labels:
+        app: sample-config-mount
+    spec:
+      containers:
+        - name: nginx-1
+          image: nginx:latest
+          env:
+            - name: oneEnv
+              valueFrom:
+                configMapKeyRef:
+                  name: config-volume1
+                  key: configKey
+          volumeMounts:
+            - name: config-volume1
+              mountPath: /tmp/cfg1
+        - name: nginx-2
+          image: nginx:latest
+          envFrom:
+            - configMapRef:
+                name: config-volume2
+          volumeMounts:
+            - name: config-volume2
+              mountPath: /tmp/cfg2
+              
+      volumes:
+        - name: config-volume1
+          configMap:
+            name: sample-configmap
+        - name: config-volume2
+          configMap:
+            name: sample-configmap
+            items:
+              - key: nginx.conf
+                path: nginx-sample.conf
